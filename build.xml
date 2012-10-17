@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     Apr 11, 2011 3:57:12 PM                                                        
+
+     BPLTaglets
+     A few taglets for documenting BPLActions
+                   
+     mshankar                                                                
+     ====================================================================== -->
+<project name="BPLTaglets" default="jar">
+    <description>
+    	A few taglets for documenting BPLActions
+    </description>
+	
+	<property environment="env"/>
+	<property name="src" location="src"/>
+	<property name="classes" location="bin/"/>
+	<property name="lib" location="lib/"/>
+	<property name="jardest" location="dist/"/>
+
+    <target name="jar" depends="compile">
+    	<copy file="README.txt" todir="${classes}"/>
+    	<copy file="build.xml" todir="${classes}"/>
+        <jar destfile="${jardest}/BPLTaglets.jar" basedir="${classes}">
+        </jar>
+    </target>
+
+    <target name="compile" depends="clean">
+    	<javac srcdir="${src}" destdir="${classes}" includeantruntime="false">
+	         <classpath>
+               <fileset dir="${lib}">
+                 <include name="**/*.jar"/>
+               </fileset>
+               <fileset dir="${env.JAVA_HOME}">
+                 <include name="lib/tools.jar"/>
+               </fileset>
+	         </classpath>
+    	</javac>
+    </target>
+
+	<target name="clean">
+    	<delete>
+			<fileset dir="${classes}">
+			    <include name="*.class"/>
+			</fileset>
+		</delete>
+    </target>
+</project>
