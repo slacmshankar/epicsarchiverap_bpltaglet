@@ -1,8 +1,14 @@
 package org.epics.archiverappliance.taglets;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import com.sun.javadoc.Tag;
-import com.sun.tools.doclets.Taglet;
+import javax.lang.model.element.Element;
+
+import com.sun.source.doctree.DocTree;
+
+import jdk.javadoc.doclet.Taglet;
+
 
 /**
  * Taglet for a param. 
@@ -12,68 +18,31 @@ import com.sun.tools.doclets.Taglet;
 public class BPLActionEndTaglet implements Taglet {
 
     private static final String NAME = "epics.BPLActionEnd";
+    
+    public BPLActionEndTaglet() {
+    }
 
+	@Override
     public String getName() {
         return NAME;
     }
 
-    public boolean inField() {
-        return false;
-    }
-
-    public boolean inConstructor() {
-        return false;
-    }
-
-    public boolean inMethod() {
-        return true;
-    }
-
-    public boolean inOverview() {
-        return true;
-    }
-
-    public boolean inPackage() {
-        return true;
-    }
-
-    public boolean inType() {
-        return true;
-    }
-
+	@Override
     public boolean isInlineTag() {
         return false;
     }
 
-    /**
-     * Register this Taglet.
-     * @param tagletMap  the map to register this tag to.
-     */
-    public static void register(Map<String, Taglet> tagletMap) {
-       BPLActionEndTaglet tag = new BPLActionEndTaglet();
-       Taglet t = (Taglet) tagletMap.get(tag.getName());
-       if (t != null) {
-           tagletMap.remove(tag.getName());
-       }
-       tagletMap.put(tag.getName(), tag);
-    }
 
-    /**
-     * Given the <code>Tag</code> representation of this custom
-     * tag, return its string representation.
-     * @param tag   the <code>Tag</code> representation of this custom tag.
-     */
-    public String toString(Tag tag) {
-    	return toString(new Tag[] { tag });
-    }
+	@Override
+	public Set<Location> getAllowedLocations() {
+		Set<Location> locations = new HashSet<Location>();
+		locations.add(Location.TYPE);
+		return locations;
+	}
 
-    /**
-     * Given an array of <code>Tag</code>s representing this custom
-     * tag, return its string representation.
-     * @param tags  the array of <code>Tag</code>s representing of this custom tag.
-     */
-    public String toString(Tag[] tags) {
-        if (tags.length == 0) {
+	@Override
+	public String toString(List<? extends DocTree> tags, Element element) {
+        if (tags.size() == 0) {
             return null;
         }
 
@@ -84,6 +53,6 @@ public class BPLActionEndTaglet implements Taglet {
         BPLActionDetails.addMethodTerminator();
         
         return buf.toString();
-    }    
+	}    
 }
 

@@ -19,13 +19,16 @@
 	<property name="jardest" location="dist/"/>
 
     <target name="jar" depends="compile">
-    	<copy file="README.txt" todir="${classes}"/>
+    	<copy file="README.md" todir="${classes}"/>
     	<copy file="build.xml" todir="${classes}"/>
         <jar destfile="${jardest}/BPLTaglets.jar" basedir="${classes}">
         </jar>
     </target>
 
     <target name="compile" depends="clean">
+    	<mkdir dir="${classes}"/>
+    	<mkdir dir="${lib}"/>
+    	<mkdir dir="${jardest}"/>
     	<javac srcdir="${src}" destdir="${classes}" includeantruntime="false">
 	         <classpath>
                <fileset dir="${lib}">

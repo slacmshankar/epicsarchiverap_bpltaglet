@@ -1,8 +1,20 @@
 package org.epics.archiverappliance.taglets;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import com.sun.javadoc.Tag;
-import com.sun.tools.doclets.Taglet;
+import javax.lang.model.element.Element;
+
+import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.DocTree.Kind;
+import com.sun.source.doctree.EndElementTree;
+import com.sun.source.doctree.StartElementTree;
+import com.sun.source.doctree.TextTree;
+import com.sun.source.doctree.UnknownBlockTagTree;
+import com.sun.source.util.SimpleDocTreeVisitor;
+
+import jdk.javadoc.doclet.Taglet;
+
 
 /**
  * Taglet for a param. 
@@ -12,95 +24,86 @@ import com.sun.tools.doclets.Taglet;
 public class BPLActionParamTaglet implements Taglet {
 
     private static final String NAME = "epics.BPLActionParam";
+    
+    public BPLActionParamTaglet() {
+    }
 
+	@Override
     public String getName() {
         return NAME;
     }
 
-    public boolean inField() {
-        return false;
-    }
-
-    public boolean inConstructor() {
-        return false;
-    }
-
-    public boolean inMethod() {
-        return true;
-    }
-
-    public boolean inOverview() {
-        return true;
-    }
-
-    public boolean inPackage() {
-        return true;
-    }
-
-    public boolean inType() {
-        return true;
-    }
-
+	@Override
     public boolean isInlineTag() {
         return false;
     }
 
-    /**
-     * Register this Taglet.
-     * @param tagletMap  the map to register this tag to.
-     */
-    public static void register(Map<String, Taglet> tagletMap) {
-       BPLActionParamTaglet tag = new BPLActionParamTaglet();
-       Taglet t = (Taglet) tagletMap.get(tag.getName());
-       if (t != null) {
-           tagletMap.remove(tag.getName());
-       }
-       tagletMap.put(tag.getName(), tag);
-    }
+	@Override
+	public Set<Location> getAllowedLocations() {
+		Set<Location> locations = new HashSet<Location>();
+		locations.add(Location.TYPE);
+		return locations;
+	}
 
-    /**
-     * Given the <code>Tag</code> representation of this custom
-     * tag, return its string representation.
-     * @param tag   the <code>Tag</code> representation of this custom tag.
-     */
-    public String toString(Tag tag) {
-    	return toString(new Tag[] { tag });
-    }
-
-    /**
-     * Given an array of <code>Tag</code>s representing this custom
-     * tag, return its string representation.
-     * @param tags  the array of <code>Tag</code>s representing of this custom tag.
-     */
-    public String toString(Tag[] tags) {
-        if (tags.length == 0) {
+	@Override
+	public String toString(List<? extends DocTree> tags, Element element) {
+        if (tags.size() == 0) {
             return null;
         }
 
         StringBuilder buf = new StringBuilder();
-        for(Tag tag : tags) {
+        for(DocTree tag : tags) {
             buf.append("<li>");
-        	String tagText = tag.text();
-        	if(tagText.contains("-")) { 
-        		String[] parts = tagText.split("-");
-        		buf.append("<b>");
-                buf.append(parts[0]);
-        		buf.append("</b>");
-        		StringBuilder desc = new StringBuilder();
-        		for(int i = 1; i < parts.length; i++) { 
-        			desc.append(parts[i]);
-        		}
-        		String paramDesc = desc.toString();
-        		buf.append(paramDesc);
+			if(tag.getKind() != Kind.UNKNOWN_BLOCK_TAG) {
+				System.out.println("Unknown tag kind in " + getClass().getName() + ":" + tag.getKind());
+			}
+			String tagText = tag.accept(new SimpleDocTreeVisitor<String, Integer>() {
+            	public String visitUnknownBlockTag(UnknownBlockTagTree btt, Integer p) {
+            		StringBuilder unStr = new StringBuilder();
+            		for(DocTree childTag : btt.getContent()) {
+            			if(childTag.getKind() != Kind.TEXT && childTag.getKind() != Kind.START_ELEMENT && childTag.getKind() != Kind.END_ELEMENT) {
+            				System.out.println("Unknown child tag kind in " + getClass().getName() + ":" + childTag.getKind());
+            			}
+            			unStr.append(childTag.accept(new SimpleDocTreeVisitor<String, Integer>(){
+            				@Override
+            				public String visitText(TextTree node, Integer p) {
+            					return node.getBody();
+            				}
+            				@Override
+            				public String visitStartElement(StartElementTree node, Integer p) {
+            					return "<" + node.getName() + ">";
+            				}
+							@Override
+							public String visitEndElement(EndElementTree node, Integer p) {
+            					return "</" + node.getName() + ">";
+							}
+            			}, 0));
+            		}
+            		return unStr.toString();
+            	}
+            }, 0);
+        	
+			if(tagText.contains("-")) { 
+				String[] parts = tagText.split("-");
+				buf.append("<b>");
+				buf.append(parts[0]);
+				buf.append("</b>");
+				StringBuilder desc = new StringBuilder();
+				for(int i = 1; i < parts.length; i++) { 
+					desc.append(parts[i]);
+				}
+				String paramDesc = desc.toString();
+				buf.append(paramDesc);
 
-        		BPLActionDetails.addParamDesc(parts[0], paramDesc);
-        	} else { 
-                buf.append(tag.text());
-        	}
+				BPLActionDetails.addParamDesc(parts[0], paramDesc);
+			} else { 
+				buf.append(tagText);
+			}
+
             buf.append("</li>");
         }
 
         return buf.toString();
-    }    
+	}    
 }
 
