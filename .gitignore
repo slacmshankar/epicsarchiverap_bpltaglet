@@ -1,0 +1,10 @@
+RELEASE_NOTES
+bin/
+docs/EPICSEvent.proto
+docs/LICENSE
+docs/api/
+stage/
+.DS_Store
+*.swp
+/mts
+
