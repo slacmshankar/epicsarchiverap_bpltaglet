@@ -5,9 +5,11 @@ import java.util.Set;
 
 import javax.lang.model.element.Element;
 
+import com.sun.source.doctree.AttributeTree;
 import com.sun.source.doctree.DocTree;
 import com.sun.source.doctree.DocTree.Kind;
 import com.sun.source.doctree.EndElementTree;
+import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.StartElementTree;
 import com.sun.source.doctree.TextTree;
 import com.sun.source.doctree.UnknownBlockTagTree;
@@ -61,7 +63,7 @@ public class BPLActionParamTaglet implements Taglet {
             	public String visitUnknownBlockTag(UnknownBlockTagTree btt, Integer p) {
             		StringBuilder unStr = new StringBuilder();
             		for(DocTree childTag : btt.getContent()) {
-            			if(childTag.getKind() != Kind.TEXT && childTag.getKind() != Kind.START_ELEMENT && childTag.getKind() != Kind.END_ELEMENT) {
+            			if(childTag.getKind() != Kind.TEXT && childTag.getKind() != Kind.START_ELEMENT && childTag.getKind() != Kind.END_ELEMENT && childTag.getKind() != Kind.ENTITY) {
             				System.out.println("Unknown child tag kind in " + getClass().getName() + ":" + childTag.getKind());
             			}
             			unStr.append(childTag.accept(new SimpleDocTreeVisitor<String, Integer>(){
@@ -71,12 +73,44 @@ public class BPLActionParamTaglet implements Taglet {
             				}
             				@Override
             				public String visitStartElement(StartElementTree node, Integer p) {
-            					return "<" + node.getName() + ">";
+            					StringBuilder startNodeStr = new StringBuilder();
+            					startNodeStr.append("<");
+            					startNodeStr.append(node.getName());
+            					for(DocTree attr : node.getAttributes()) {
+            						startNodeStr.append(attr.accept(new SimpleDocTreeVisitor<String, Integer>(){
+										@Override
+										public String visitAttribute(AttributeTree at, Integer p) {
+			            					StringBuilder attrStr = new StringBuilder();
+			            					attrStr.append(" ");
+			            					attrStr.append(at.getName());
+			            					attrStr.append("=\"");
+			            					for(DocTree atvl : at.getValue()) {
+			            						attrStr.append(atvl.accept(new SimpleDocTreeVisitor<String, Integer>(){
+													@Override
+													public String visitText(TextTree vtn, Integer p) {
+														return vtn.getBody();
+													}
+			            							
+			            						}, 0));
+			            					}
+			            					attrStr.append("\"");
+											return attrStr.toString();
+										}
+            							
+            						}, 0));
+            					}
+            					startNodeStr.append(">");
+            					return  startNodeStr.toString();
             				}
 							@Override
 							public String visitEndElement(EndElementTree node, Integer p) {
             					return "</" + node.getName() + ">";
 							}
+							@Override
+							public String visitEntity(EntityTree entity, Integer p) {
+								return "&" + entity.getName().toString() + ";";
+							}
+							
             			}, 0));
             		}
             		return unStr.toString();
